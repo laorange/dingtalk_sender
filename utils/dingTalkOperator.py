@@ -1,33 +1,21 @@
 import json
-from typing import List, TypedDict, Dict, Tuple
-from tqdm import tqdm
+from typing import Tuple
+
+from utils.types import *
 
 import requests
+from tqdm import tqdm
 
-SETTING_JSON_FILE = "settings.json"
-
-
-class SimpleUserInfoDict(TypedDict):
-    name: str
-    userid: str
-
-
-class DepartmentDict(TypedDict):
-    ext: str  # --------------------------- "ext": "{\"faceCount\":\"int\"}",
-    auto_add_user: bool  # ---------------- "auto_add_user": true,
-    parent_id: int  # --------------------- "parent_id": 1,
-    name: str  # -------------------------- "name": "xx部门",
-    dept_id: int  # ----------------------- "dept_id": int,
-    create_dept_group: bool  # ------------ "create_dept_group": true
+SETTING_JSON_FILE = "../settings.json"
 
 
 class DingTalkOperator:
     def __init__(self):
-        settings = self.getSettings()
+        settings: Settings = self.getSettings()
 
-        agentId = settings.get("AGENT_ID", None)
-        appKey = settings.get("APP_KEY", None)
-        appSecret = settings.get("APP_SECRET", None)
+        agentId: str = settings.get("AGENT_ID", None)
+        appKey: str = settings.get("APP_KEY", None)
+        appSecret: str = settings.get("APP_SECRET", None)
 
         self.agentId: str = agentId if agentId else input("请输入AgentId: ")
         self.appKey: str = appKey if appKey else input("请输入AppKey: ")
@@ -36,11 +24,11 @@ class DingTalkOperator:
         departmentIdList = settings.get("PRESET_DEPARTMENTS", None)
         userDict = settings.get("PRESET_MEMBERS", None)
 
-        self.accessToken = self.getAccessToken()
+        self.accessToken: str = self.getAccessToken()
 
-        self.departmentIdList = departmentIdList if departmentIdList else self.getDescendantDepartmentIdList()
-        self.userDict = userDict if userDict else self.getFullUser()
-        self.settings = {
+        self.departmentIdList: List[DepartmentId] = departmentIdList if departmentIdList else self.getDescendantDepartmentIdList()
+        self.userDict: UserNameIdDict = userDict if userDict else self.getFullUser()
+        self.settings: Settings = {
             "AGENT_ID": self.agentId,
             "APP_KEY": self.appKey,
             "APP_SECRET": self.appSecret,
@@ -56,7 +44,7 @@ class DingTalkOperator:
         return {k: json.dumps(v, ensure_ascii=False) if isinstance(v, dict) else v for k, v in formDict.items()}
 
     @staticmethod
-    def getSettings():
+    def getSettings() -> Settings:
         try:
             with open(SETTING_JSON_FILE, encoding="utf-8") as settings_json:
                 _settings = json.load(settings_json)
@@ -69,7 +57,7 @@ class DingTalkOperator:
             json.dump(self.settings, file, ensure_ascii=False)
 
     @staticmethod
-    def getDingTalkResponse(method, url, params, data=None):
+    def getDingTalkResponse(method: Method, url: str, params, data=None) -> Dict:
         if method == "GET":
             response = requests.get(url, params=params).json()
         elif method == "POST":
@@ -86,58 +74,58 @@ class DingTalkOperator:
         accessToken = requests.get(url, params=params).json()["access_token"]
         return accessToken
 
-    def getSimpleUserList(self, dept_id=1, cursor=0, size=100) -> List[SimpleUserInfoDict]:
+    def getSimpleUserList(self, dept_id: DepartmentId = 1, cursor=0, size=100) -> List[UserInfoDict]:
         url = "https://oapi.dingtalk.com/topapi/user/listsimple"
         params = dict(access_token=self.accessToken)
         data = dict(dept_id=dept_id, cursor=cursor, size=size)
         response = self.getDingTalkResponse("POST", url, params, data)
-        userList: List[SimpleUserInfoDict] = response["result"]["list"]
+        userList: List[UserInfoDict] = response["result"]["list"]
 
         if response["result"]["has_more"]:
             userList = userList + self.getSimpleUserList(dept_id=dept_id, cursor=cursor + 1, size=size)
 
         return userList
 
-    def getSubDepartmentIdList(self, departmentId: int = 1) -> List[int]:
+    def getSubDepartmentIdList(self, departmentId: DepartmentId = 1) -> List[DepartmentId]:
         url = "https://oapi.dingtalk.com/topapi/v2/department/listsubid"
         params = dict(access_token=self.accessToken)
         data = dict(dept_id=departmentId)
         response = self.getDingTalkResponse("POST", url, params, data)
         return response["result"]["dept_id_list"]
 
-    def getDescendantDepartmentIdList(self, departmentId: int = 1) -> List[int]:
+    def getDescendantDepartmentIdList(self, departmentId: DepartmentId = 1) -> List[DepartmentId]:
         descendantDepartmentIdList = self.getSubDepartmentIdList(departmentId)
         if len(descendantDepartmentIdList) != 0:
             for descendantDepartmentId in tqdm(descendantDepartmentIdList, desc="正在获取部门信息"):
                 descendantDepartmentIdList += self.getSubDepartmentIdList(descendantDepartmentId)
         return descendantDepartmentIdList + [1]  # 根部门 id=1
 
-    def getDepartmentName(self, departmentId: int = 1) -> str:
+    def getDepartmentName(self, departmentId: DepartmentId = 1) -> DepartmentName:
         url = "https://oapi.dingtalk.com/topapi/v2/department/get"
         params = dict(access_token=self.accessToken)
         data = dict(dept_id=departmentId)
         response = self.getDingTalkResponse("POST", url, params, data)
         return response["result"]["name"]
 
-    def getUserDetail(self, userId: str) -> Dict:
+    def getUserDetail(self, userId: UserId) -> Dict:
         url = "https://oapi.dingtalk.com/topapi/v2/user/get"
         params = dict(access_token=self.accessToken)
         data = dict(userid=userId)
         response = self.getDingTalkResponse("POST", url, params, data)
         return response["result"]
 
-    def getUserDepartmentIdList(self, userId: str) -> List[int]:
-        return [user["dept_id_list"] for user in self.getUserDetail(userId)]
+    def getUserDepartmentIdList(self, userId: UserId) -> List[DepartmentId]:
+        return [departmentId for departmentId in self.getUserDetail(userId)["dept_id_list"]]
 
-    def getUserUnionId(self, userId: str) -> List[str]:
-        return [user["unionid"] for user in self.getUserDetail(userId)]
+    def getUserUnionId(self, userId: UnionId) -> UnionId:
+        return self.getUserDetail(userId)["unionid"]
 
-    def getDepartmentNameListOfUser(self, userId: str) -> List[str]:
+    def getDepartmentNameListOfUser(self, userId: UserId) -> List[DepartmentName]:
         departmentIdList = self.getUserDepartmentIdList(userId)
         return [self.getDepartmentName(departmentId) for departmentId in departmentIdList]
 
-    def getFullUser(self):
-        userDict: Dict[str, str] = {}
+    def getFullUser(self) -> UserNameIdDict:
+        userDict: Dict[UserName, UserId] = {}
         for departmentId in tqdm(self.departmentIdList, desc="正在获取部门成员信息"):
             userInfoList = self.getSimpleUserList(dept_id=departmentId)
             for userInfo in userInfoList:
@@ -150,10 +138,10 @@ class DingTalkOperator:
                 userDict[userInfo["name"]] = userInfo["userid"]
         return userDict
 
-    def filterUsers(self, givenUserNames: List[str]) -> list[Tuple[str, str]]:
+    def filterUsers(self, givenUserNames: List[UserName]) -> list[Tuple[UserName, UserId]]:
         return [(userName, self.userDict[userName]) for userName in givenUserNames if userName in self.userDict]
 
-    def sendCorporationMsg(self, user_id_list: List[str], msg: Dict):
+    def sendCorporationMsg(self, user_id_list: List[UserId], msg: Dict) -> Dict:
         """
         发送工作消息\n
         :param user_id_list: 发送目标的id
@@ -170,6 +158,6 @@ class DingTalkOperator:
         print("发送完成!")
         return response
 
-    def sendCorporationTextMsg(self, user_id_list: List[str], text: str):
+    def sendCorporationTextMsg(self, user_id_list: List[UserId], text: str) -> Dict:
         """发送文字类型的工作消息"""
         return self.sendCorporationMsg(user_id_list, msg={"msgtype": "text", "text": {"content": text}})
