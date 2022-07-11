@@ -1,5 +1,5 @@
 import json
-from typing import Tuple
+from typing import Tuple, Union
 
 from utils.types import *
 
@@ -13,35 +13,20 @@ class DingTalkOperator:
     def __init__(self):
         settings: Settings = self.getSettings()
 
-        agentId: str = settings.get("AGENT_ID", None)
-        appKey: str = settings.get("APP_KEY", None)
-        appSecret: str = settings.get("APP_SECRET", None)
-
-        self.agentId: str = agentId if agentId else input("请输入AgentId: ")
-        self.appKey: str = appKey if appKey else input("请输入AppKey: ")
-        self.appSecret: str = appSecret if appSecret else input("请输入AppSecret: ")
-
-        departmentIdList = settings.get("PRESET_DEPARTMENTS", None)
-        userDict = settings.get("PRESET_MEMBERS", None)
+        self.agentId: str = _ if (_ := settings.get("AGENT_ID", None)) else input("请输入AgentId: ")
+        self.appKey: str = _ if (_ := settings.get("APP_KEY", None)) else input("请输入AppKey: ")
+        self.appSecret: str = _ if (_ := settings.get("APP_SECRET", None)) else input("请输入AppSecret: ")
+        self.departmentIdList: List[DepartmentId] = _ if (_ := settings.get("PRESET_DEPARTMENTS", None)) else self.getDescendantDepartmentIdList()
+        self.userDict: UserNameIdDict = _ if (_ := settings.get("PRESET_MEMBERS", None)) else self.getFullUser()
 
         self.accessToken: str = self.getAccessToken()
 
-        self.departmentIdList: List[DepartmentId] = departmentIdList if departmentIdList else self.getDescendantDepartmentIdList()
-        self.userDict: UserNameIdDict = userDict if userDict else self.getFullUser()
-        self.settings: Settings = {
-            "AGENT_ID": self.agentId,
-            "APP_KEY": self.appKey,
-            "APP_SECRET": self.appSecret,
-            "PRESET_DEPARTMENTS": self.departmentIdList,
-            "PRESET_MEMBERS": self.userDict
-        }
-
+        self.settings: Settings = {"AGENT_ID": self.agentId,
+                                   "APP_KEY": self.appKey,
+                                   "APP_SECRET": self.appSecret,
+                                   "PRESET_DEPARTMENTS": self.departmentIdList,
+                                   "PRESET_MEMBERS": self.userDict}
         self.outputSettings()
-
-    @staticmethod
-    def transformDictToFormData(formDict: Dict):
-        """将字典中的字典转换为JSON，否则多层字典会导致提交错误。参考资料：https://blog.csdn.net/monkey7777/article/details/75109962"""
-        return {k: json.dumps(v, ensure_ascii=False) if isinstance(v, dict) else v for k, v in formDict.items()}
 
     @staticmethod
     def getSettings() -> Settings:
@@ -56,8 +41,9 @@ class DingTalkOperator:
         with open(SETTING_JSON_FILE, "wt", encoding="utf-8") as file:
             json.dump(self.settings, file, ensure_ascii=False)
 
-    @staticmethod
-    def getDingTalkResponse(method: Method, url: str, params, data=None) -> Dict:
+    def getDingTalkResponse(self, method: Method, url: str, params, data: Union[None, dict] = None) -> Dict:
+        if isinstance(data, dict):
+            data = self.transformDictToFormData(data)
         if method == "GET":
             response = requests.get(url, params=params).json()
         elif method == "POST":
@@ -124,6 +110,15 @@ class DingTalkOperator:
         departmentIdList = self.getUserDepartmentIdList(userId)
         return [self.getDepartmentName(departmentId) for departmentId in departmentIdList]
 
+    def getAdministratorInfoList(self) -> List[AdministratorInfo]:
+        url = "https://oapi.dingtalk.com/topapi/user/listadmin"
+        params = dict(access_token=self.accessToken)
+        response = self.getDingTalkResponse("POST", url, params)
+        return response["result"]
+
+    def getMainAdministratorId(self) -> UserId:
+        return [admin['userid'] for admin in self.getAdministratorInfoList() if admin['sys_level'] == 1][0]
+
     def getFullUser(self) -> UserNameIdDict:
         userDict: Dict[UserName, UserId] = {}
         for departmentId in tqdm(self.departmentIdList, desc="正在获取部门成员信息"):
@@ -138,8 +133,13 @@ class DingTalkOperator:
                 userDict[userInfo["name"]] = userInfo["userid"]
         return userDict
 
-    def filterUsers(self, givenUserNames: List[UserName]) -> list[Tuple[UserName, UserId]]:
+    def filterUserTuples(self, givenUserNames: List[UserName]) -> list[Tuple[UserName, UserId]]:
         return [(userName, self.userDict[userName]) for userName in givenUserNames if userName in self.userDict]
+
+    @staticmethod
+    def transformDictToFormData(formDict: Dict):
+        """将字典中的字典转换为JSON，否则多层字典会导致提交错误。参考资料：https://blog.csdn.net/monkey7777/article/details/75109962"""
+        return {k: json.dumps(v, ensure_ascii=False) if isinstance(v, dict) else v for k, v in formDict.items()}
 
     def sendCorporationMsg(self, user_id_list: List[UserId], msg: Dict) -> Dict:
         """
@@ -154,19 +154,10 @@ class DingTalkOperator:
                 "msg": msg,
                 "userid_list": ",".join(user_id_list)}
 
-        response = self.getDingTalkResponse("POST", url, params, self.transformDictToFormData(data))
+        response = self.getDingTalkResponse("POST", url, params, data)
         print("发送完成!")
         return response
 
     def sendCorporationTextMsg(self, user_id_list: List[UserId], text: str) -> Dict:
         """发送文字类型的工作消息"""
         return self.sendCorporationMsg(user_id_list, msg={"msgtype": "text", "text": {"content": text}})
-
-    def getAdministratorInfoList(self) -> List[AdministratorInfo]:
-        url = "https://oapi.dingtalk.com/topapi/user/listadmin"
-        params = dict(access_token=self.accessToken)
-        response = self.getDingTalkResponse("POST", url, params)
-        return response["result"]
-
-    def getMainAdministratorId(self) -> UserId:
-        return [admin['userid'] for admin in self.getAdministratorInfoList() if admin['sys_level'] == 1][0]
