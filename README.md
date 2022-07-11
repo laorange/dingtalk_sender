@@ -40,7 +40,7 @@
 
    > 注：在输入发送的对象时，可直接选中Excel的一列，在程序中直接粘贴。
 
-![demo.jpeg](assets\demo.jpeg)
+![demo.jpeg](assets/demo.jpeg)
 
 
 
