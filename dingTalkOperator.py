@@ -51,6 +51,11 @@ class DingTalkOperator:
         self.outputSettings()
 
     @staticmethod
+    def transformDictToFormData(formDict: Dict):
+        """将字典中的字典转换为JSON，否则多层字典会导致提交错误。参考资料：https://blog.csdn.net/monkey7777/article/details/75109962"""
+        return {k: json.dumps(v, ensure_ascii=False) if isinstance(v, dict) else v for k, v in formDict.items()}
+
+    @staticmethod
     def getSettings():
         try:
             with open(SETTING_JSON_FILE, encoding="utf-8") as settings_json:
@@ -153,12 +158,10 @@ class DingTalkOperator:
             return print("发送名单为空！")
         url = "https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2"
         params = dict(access_token=self.accessToken)
-
-        msg = json.dumps({"msgtype": "text", "text": {"content": text}}),
         data = {"agent_id": self.agentId,
-                "msg": msg,
+                "msg": {"msgtype": "text", "text": {"content": text}},
                 "userid_list": ",".join(user_id_list)}
 
-        response = self.getDingTalkResponse("POST", url, params, data)
+        response = self.getDingTalkResponse("POST", url, params, self.transformDictToFormData(data))
         print("发送完成!")
         return response
