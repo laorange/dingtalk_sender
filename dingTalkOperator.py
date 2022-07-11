@@ -119,15 +119,21 @@ class DingTalkOperator:
         response = self.getDingTalkResponse("POST", url, params, data)
         return response["result"]["name"]
 
-    def getDepartmentIdListOfUser(self, userId: str) -> List[int]:
+    def getUserDetail(self, userId: str) -> Dict:
         url = "https://oapi.dingtalk.com/topapi/v2/user/get"
         params = dict(access_token=self.accessToken)
         data = dict(userid=userId)
         response = self.getDingTalkResponse("POST", url, params, data)
-        return response["result"]["dept_id_list"]
+        return response["result"]
+
+    def getUserDepartmentIdList(self, userId: str) -> List[int]:
+        return [user["dept_id_list"] for user in self.getUserDetail(userId)]
+
+    def getUserUnionId(self, userId: str) -> List[str]:
+        return [user["unionid"] for user in self.getUserDetail(userId)]
 
     def getDepartmentNameListOfUser(self, userId: str) -> List[str]:
-        departmentIdList = self.getDepartmentIdListOfUser(userId)
+        departmentIdList = self.getUserDepartmentIdList(userId)
         return [self.getDepartmentName(departmentId) for departmentId in departmentIdList]
 
     def getFullUser(self):
