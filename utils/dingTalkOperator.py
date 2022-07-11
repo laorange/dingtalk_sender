@@ -161,3 +161,23 @@ class DingTalkOperator:
     def sendCorporationTextMsg(self, user_id_list: List[UserId], text: str) -> Dict:
         """发送文字类型的工作消息"""
         return self.sendCorporationMsg(user_id_list, msg={"msgtype": "text", "text": {"content": text}})
+
+    def sendBulletin(self, user_id_list: List[UserId], title: str, content: str,
+                     operation_userid: str = "",
+                     author: str = "通知程序", whether_private: bool = True,
+                     whether_push_top: bool = False, whether_ding: bool = True) -> Dict:
+        url = "https://oapi.dingtalk.com/topapi/blackboard/create"
+        params = dict(access_token=self.accessToken)
+        data = {"create_request": {
+            "operation_userid": operation_userid if operation_userid else self.getMainAdministratorId(),
+            "private_level": 20 if whether_private else 0,
+            "ding": whether_ding,
+            "blackboard_receiver": {
+                "userid_list": user_id_list
+            },
+            "title": title,
+            "content": content,
+            "push_top": whether_push_top,
+            "author": author
+        }}
+        return self.getDingTalkResponse("POST", url, params, data)
