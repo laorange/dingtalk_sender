@@ -147,21 +147,23 @@ class DingTalkOperator:
     def filterUsers(self, givenUserNames: List[str]) -> list[Tuple[str, str]]:
         return [(userName, self.userDict[userName]) for userName in givenUserNames if userName in self.userDict]
 
-    def sendCorporationTextMsg(self, user_id_list: List[str], text: str):
+    def sendCorporationMsg(self, user_id_list: List[str], msg: Dict):
         """
-        发送工作信息\n
-        :param user_id_list: 发送的消息内容
-        :param text: 发送目标的id
+        发送工作消息\n
+        :param user_id_list: 发送目标的id
+        :param msg: 发送的消息内容
         :return: post请求后的结果
         """
-        if not user_id_list:
-            return print("发送名单为空！")
         url = "https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2"
         params = dict(access_token=self.accessToken)
         data = {"agent_id": self.agentId,
-                "msg": {"msgtype": "text", "text": {"content": text}},
+                "msg": msg,
                 "userid_list": ",".join(user_id_list)}
 
         response = self.getDingTalkResponse("POST", url, params, self.transformDictToFormData(data))
         print("发送完成!")
         return response
+
+    def sendCorporationTextMsg(self, user_id_list: List[str], text: str):
+        """发送文字类型的工作消息"""
+        return self.sendCorporationMsg(user_id_list, msg={"msgtype": "text", "text": {"content": text}})
