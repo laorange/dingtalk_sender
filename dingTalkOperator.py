@@ -7,7 +7,7 @@ import requests
 SETTING_JSON_FILE = "settings.json"
 
 
-class DingUserInfoDict(TypedDict):
+class SimpleUserInfoDict(TypedDict):
     name: str
     userid: str
 
@@ -21,13 +21,9 @@ class DepartmentDict(TypedDict):
     create_dept_group: bool  # ------------ "create_dept_group": true
 
 
-class DingDingOperator:
+class DingTalkOperator:
     def __init__(self):
-        try:
-            with open(SETTING_JSON_FILE, encoding="utf-8") as settings_json:
-                settings = json.load(settings_json)
-        except FileNotFoundError:
-            settings = dict()
+        settings = self.getSettings()
 
         agentId = settings.get("AGENT_ID", None)
         appKey = settings.get("APP_KEY", None)
@@ -51,6 +47,19 @@ class DingDingOperator:
             "PRESET_DEPARTMENTS": self.departmentIdList,
             "PRESET_MEMBERS": self.userDict
         }
+
+        self.outputSettings()
+
+    @staticmethod
+    def getSettings():
+        try:
+            with open(SETTING_JSON_FILE, encoding="utf-8") as settings_json:
+                _settings = json.load(settings_json)
+        except FileNotFoundError:
+            _settings = dict()
+        return _settings
+
+    def outputSettings(self):
         with open(SETTING_JSON_FILE, "wt", encoding="utf-8") as file:
             json.dump(self.settings, file, ensure_ascii=False)
 
@@ -72,15 +81,15 @@ class DingDingOperator:
         accessToken = requests.get(url, params=params).json()["access_token"]
         return accessToken
 
-    def getUserListSimple(self, dept_id=1, cursor=0, size=100) -> List[DingUserInfoDict]:
+    def getSimpleUserList(self, dept_id=1, cursor=0, size=100) -> List[SimpleUserInfoDict]:
         url = "https://oapi.dingtalk.com/topapi/user/listsimple"
         params = dict(access_token=self.accessToken)
         data = dict(dept_id=dept_id, cursor=cursor, size=size)
         response = self.getDingTalkResponse("POST", url, params, data)
-        userList: List[DingUserInfoDict] = response["result"]["list"]
+        userList: List[SimpleUserInfoDict] = response["result"]["list"]
 
         if response["result"]["has_more"]:
-            userList = userList + self.getUserListSimple(dept_id=dept_id, cursor=cursor + 1, size=size)
+            userList = userList + self.getSimpleUserList(dept_id=dept_id, cursor=cursor + 1, size=size)
 
         return userList
 
@@ -119,7 +128,7 @@ class DingDingOperator:
     def getFullUser(self):
         userDict: Dict[str, str] = {}
         for departmentId in tqdm(self.departmentIdList, desc="正在获取部门成员信息"):
-            userInfoList = self.getUserListSimple(dept_id=departmentId)
+            userInfoList = self.getSimpleUserList(dept_id=departmentId)
             for userInfo in userInfoList:
                 if previousUserId := userDict.get(userInfo["name"], None):
                     if previousUserId != userInfo["userid"]:
@@ -133,12 +142,12 @@ class DingDingOperator:
     def filterUsers(self, givenUserNames: List[str]) -> list[Tuple[str, str]]:
         return [(userName, self.userDict[userName]) for userName in givenUserNames if userName in self.userDict]
 
-    def sent_text_msg(self, user_id_list: List[str], text: str):
+    def sendCorporationTextMsg(self, user_id_list: List[str], text: str):
         """
-        发送文字信息
-        :param text : 发送的消息内容
-        :param user_id_list : 发送目标的id
-        :return post请求后的结果
+        发送工作信息\n
+        :param user_id_list: 发送的消息内容
+        :param text: 发送目标的id
+        :return: post请求后的结果
         """
         if not user_id_list:
             return print("发送名单为空！")
@@ -150,9 +159,6 @@ class DingDingOperator:
                 "msg": msg,
                 "userid_list": ",".join(user_id_list)}
 
-        response = requests.post(url, params=params, data=data).json()
-        if response.get("errcode", -1) != 0:
-            raise Exception(f"请求错误：{response.get('errmsg', str(response))}")
-        else:
-            print("发送完成!")
-            return response
+        response = self.getDingTalkResponse("POST", url, params, data)
+        print("发送完成!")
+        return response

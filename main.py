@@ -1,4 +1,4 @@
-from ding_ding_operator import DingDingOperator
+from dingTalkOperator import DingTalkOperator
 
 """
 钉钉应用类型：企业内部开发
@@ -23,7 +23,7 @@ def get_filtered_users():
 
 
 if __name__ == '__main__':
-    operator = DingDingOperator()
+    operator = DingTalkOperator()
 
     text = input("请输入想要发送的信息: ")
     users = get_filtered_users()
@@ -34,7 +34,7 @@ if __name__ == '__main__':
         print(f'根据您的输入，成功检索到了这些用户：{",".join([user[0] for user in filtered_users])}')
         print(f'即将向他们发送"{text}"')
         filtered_user_id_list = [user[1] for user in filtered_users]
-        send_feedback = operator.sent_text_msg(filtered_user_id_list, text)
+        send_feedback = operator.sendCorporationTextMsg(filtered_user_id_list, text)
         print(send_feedback)
     else:
         print("没有找到符合条件的用户，请查证后重试")
