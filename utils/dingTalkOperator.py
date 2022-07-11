@@ -6,7 +6,7 @@ from utils.types import *
 import requests
 from tqdm import tqdm
 
-SETTING_JSON_FILE = "../settings.json"
+SETTING_JSON_FILE = "settings.json"
 
 
 class DingTalkOperator:
@@ -161,3 +161,12 @@ class DingTalkOperator:
     def sendCorporationTextMsg(self, user_id_list: List[UserId], text: str) -> Dict:
         """发送文字类型的工作消息"""
         return self.sendCorporationMsg(user_id_list, msg={"msgtype": "text", "text": {"content": text}})
+
+    def getAdministratorInfoList(self) -> List[AdministratorInfo]:
+        url = "https://oapi.dingtalk.com/topapi/user/listadmin"
+        params = dict(access_token=self.accessToken)
+        response = self.getDingTalkResponse("POST", url, params)
+        return response["result"]
+
+    def getMainAdministratorId(self) -> UserId:
+        return [admin['userid'] for admin in self.getAdministratorInfoList() if admin['sys_level'] == 1][0]

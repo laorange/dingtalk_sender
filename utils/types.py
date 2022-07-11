@@ -9,6 +9,7 @@ Method = Literal["GET", "POST"]
 
 UserNameIdDict = Dict[UserName, UserId]
 
+
 class UserInfoDict(TypedDict):
     name: UserName
     userid: UserId
@@ -29,3 +30,8 @@ class Settings(TypedDict):
     APP_SECRET: str
     PRESET_DEPARTMENTS: List[DepartmentId]
     PRESET_MEMBERS: UserNameIdDict
+
+
+class AdministratorInfo(TypedDict):
+    sys_level: Literal[1, 2]
+    userid: UserId
