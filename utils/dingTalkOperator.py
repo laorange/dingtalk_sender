@@ -52,6 +52,8 @@ class DingTalkOperator:
             with open(SETTING_JSON_FILE, encoding="utf-8") as settings_json:
                 print("TIPS：已自动加载缓存。若需重新拉取组织成员信息，请删除或编辑配置文件”settings.json“\n")
                 _settings = json.load(settings_json)
+        except FileNotFoundError:
+            print("第一次使用？可通过 Ctrl+鼠标左键点击`https://gitee.com/laorange/dingtalk_sender`查看使用说明\n")
         finally:
             return _settings
 
