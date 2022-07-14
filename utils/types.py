@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Dict, Literal
+from typing import TypedDict, List, Dict, Literal, Tuple
 
 UserId = str
 UserName = str
@@ -8,6 +8,8 @@ DepartmentName = str
 Method = Literal["GET", "POST"]
 
 UserNameIdDict = Dict[UserName, UserId]
+
+UserNameIdTuple = Tuple[UserName, UserId]
 
 
 class UserInfoDict(TypedDict):
@@ -30,7 +32,7 @@ class Settings(TypedDict):
     APP_SECRET: str
     PRESET_DEPARTMENTS: List[DepartmentId]
     PRESET_MEMBERS: UserNameIdDict
-    ADMIN_ID: UserId
+    PUBLISHER: UserNameIdTuple
 
 
 class AdministratorInfo(TypedDict):

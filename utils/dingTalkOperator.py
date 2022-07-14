@@ -1,5 +1,5 @@
 import json
-from typing import Tuple, Union
+from typing import Union
 
 from utils.types import *
 
@@ -22,12 +22,19 @@ class DingTalkOperator:
         # 获取组织信息
         self.departmentIdList: List[DepartmentId] = _ if (_ := settings.get("PRESET_DEPARTMENTS", None)) else self.getDescendantDepartmentIdList()
         self.userDict: UserNameIdDict = _ if (_ := settings.get("PRESET_MEMBERS", None)) else self.getFullUser()
-        while 1:
-            self.adminId: UserId = _ if (_ := settings.get("ADMIN_ID", None)) else self.userDict.get(input("请指定通知发布者(主管理员或子管理员): "), "")
-            if self.adminId:
-                break
-            else:
-                print("未找到该成员，请重新输入")
+
+        # 获取发布者信息
+        self.publisher: UserNameIdTuple = settings.get("PUBLISHER", None)
+        while not self.publisher:
+            publisherId = self.userDict.get((publisherName := input("请指定通知发布者(主管理员或子管理员): ")), "")
+            if not publisherId:
+                print("ERROR: 未找到该成员，请重新输入")
+                continue
+            userDetail = self.getUserDetail(publisherId)
+            if not userDetail.get("admin", False):
+                print("ERROR: 该成员不是管理员，无法发布公告，请重新输入")
+                continue
+            self.publisher = (publisherName, publisherId)
 
         # 整理输出到配置文件
         self.settings: Settings = {"AGENT_ID": self.agentId,
@@ -35,7 +42,7 @@ class DingTalkOperator:
                                    "APP_SECRET": self.appSecret,
                                    "PRESET_DEPARTMENTS": self.departmentIdList,
                                    "PRESET_MEMBERS": self.userDict,
-                                   "ADMIN_ID": self.adminId}
+                                   "PUBLISHER": self.publisher}
         self.outputSettings()
 
     @staticmethod
@@ -43,7 +50,7 @@ class DingTalkOperator:
         _settings = dict()
         try:
             with open(SETTING_JSON_FILE, encoding="utf-8") as settings_json:
-                print("提示：已自动加载缓存。若需重新拉取组织成员信息，请删除或编辑配置文件”settings.json“。")
+                print("TIPS：已自动加载缓存。若需重新拉取组织成员信息，请删除或编辑配置文件”settings.json“\n")
                 _settings = json.load(settings_json)
         finally:
             return _settings
@@ -151,7 +158,7 @@ class DingTalkOperator:
                 userDict[userInfo["name"]] = userInfo["userid"]
         return userDict
 
-    def filterUserTuples(self, givenUserNames: List[UserName]) -> list[Tuple[UserName, UserId]]:
+    def filterUserTuples(self, givenUserNames: List[UserName]) -> list[UserNameIdTuple]:
         return [(userName, self.userDict[userName]) for userName in givenUserNames if userName in self.userDict]
 
     @staticmethod
@@ -181,13 +188,12 @@ class DingTalkOperator:
         return self.sendCorporationMsg(user_id_list, msg={"msgtype": "text", "text": {"content": text}})
 
     def sendBulletin(self, user_id_list: List[UserId], title: str, content: str,
-                     author: str = "通知程序", whether_private: bool = True,
-                     whether_push_top: bool = False, whether_ding: bool = True) -> Dict:
+                     whether_private: bool = True, whether_push_top: bool = False, whether_ding: bool = True) -> Dict:
         url = "https://oapi.dingtalk.com/topapi/blackboard/create"
         params = dict(access_token=self.accessToken)
         private_level = 20 if whether_private else 0
         data = {"create_request": {
-            "operation_userid": self.adminId,
+            "operation_userid": self.publisher[1],
             "private_level": private_level,
             "ding": whether_ding,
             "blackboard_receiver": {
@@ -196,6 +202,6 @@ class DingTalkOperator:
             "title": title,
             "content": content,
             "push_top": whether_push_top,
-            "author": author
+            "author": self.publisher[0]
         }}
         return self.getDingTalkResponse("POST", url, params, data)
