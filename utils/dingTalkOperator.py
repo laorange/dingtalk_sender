@@ -138,8 +138,15 @@ class DingTalkOperator:
                 if previousUserId := userDict.get(userInfo["name"], None):
                     if previousUserId != userInfo["userid"]:
                         print(f"\n\n警告: 发现相同名称的成员!")
-                        print(f"{userInfo['name']}({previousUserId}), 部门：{self.getDepartmentNameListOfUser(previousUserId)}")
-                        print(f"{userInfo['name']}({userInfo['userid']})，部门：{self.getDepartmentNameListOfUser(userInfo['userid'])}\n")
+                        previousUserDepartments: str = ','.join(self.getDepartmentNameListOfUser(previousUserId))
+                        print(f"{userInfo['name']}(钉钉号:{previousUserId}), 部门:{previousUserDepartments}")
+
+                        newUserDepartments: str = ','.join(self.getDepartmentNameListOfUser(userInfo['userid']))
+                        print(f"{userInfo['name']}(钉钉号:{userInfo['userid']})，部门:{newUserDepartments}\n")
+
+                        tempUserName = f"{userInfo['name']}-{newUserDepartments}"
+                        print(f"——暂将后者重命名为”{tempUserName}“\n\n")
+                        userDict[tempUserName] = userInfo["userid"]
                         continue
                 userDict[userInfo["name"]] = userInfo["userid"]
         return userDict
