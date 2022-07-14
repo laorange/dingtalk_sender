@@ -30,6 +30,7 @@ class Settings(TypedDict):
     APP_SECRET: str
     PRESET_DEPARTMENTS: List[DepartmentId]
     PRESET_MEMBERS: UserNameIdDict
+    ADMIN_ID: UserId
 
 
 class AdministratorInfo(TypedDict):

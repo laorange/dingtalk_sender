@@ -13,29 +13,40 @@ class DingTalkOperator:
     def __init__(self):
         settings: Settings = self.getSettings()
 
+        # 权限
         self.agentId: str = _ if (_ := settings.get("AGENT_ID", None)) else input("请输入AgentId: ")
         self.appKey: str = _ if (_ := settings.get("APP_KEY", None)) else input("请输入AppKey: ")
         self.appSecret: str = _ if (_ := settings.get("APP_SECRET", None)) else input("请输入AppSecret: ")
-        self.departmentIdList: List[DepartmentId] = _ if (_ := settings.get("PRESET_DEPARTMENTS", None)) else self.getDescendantDepartmentIdList()
-        self.userDict: UserNameIdDict = _ if (_ := settings.get("PRESET_MEMBERS", None)) else self.getFullUser()
-
         self.accessToken: str = self.getAccessToken()
 
+        # 获取组织信息
+        self.departmentIdList: List[DepartmentId] = _ if (_ := settings.get("PRESET_DEPARTMENTS", None)) else self.getDescendantDepartmentIdList()
+        self.userDict: UserNameIdDict = _ if (_ := settings.get("PRESET_MEMBERS", None)) else self.getFullUser()
+        while 1:
+            self.adminId: UserId = _ if (_ := settings.get("ADMIN_ID", None)) else self.userDict.get(input("请指定通知发布者(主管理员或子管理员): "), "")
+            if self.adminId:
+                break
+            else:
+                print("未找到该成员，请重新输入")
+
+        # 整理输出到配置文件
         self.settings: Settings = {"AGENT_ID": self.agentId,
                                    "APP_KEY": self.appKey,
                                    "APP_SECRET": self.appSecret,
                                    "PRESET_DEPARTMENTS": self.departmentIdList,
-                                   "PRESET_MEMBERS": self.userDict}
+                                   "PRESET_MEMBERS": self.userDict,
+                                   "ADMIN_ID": self.adminId}
         self.outputSettings()
 
     @staticmethod
     def getSettings() -> Settings:
+        _settings = dict()
         try:
             with open(SETTING_JSON_FILE, encoding="utf-8") as settings_json:
+                print("提示：已自动加载缓存。若需重新拉取组织成员信息，请删除或编辑配置文件”settings.json“。")
                 _settings = json.load(settings_json)
-        except FileNotFoundError:
-            _settings = dict()
-        return _settings
+        finally:
+            return _settings
 
     def outputSettings(self):
         with open(SETTING_JSON_FILE, "wt", encoding="utf-8") as file:
@@ -163,14 +174,14 @@ class DingTalkOperator:
         return self.sendCorporationMsg(user_id_list, msg={"msgtype": "text", "text": {"content": text}})
 
     def sendBulletin(self, user_id_list: List[UserId], title: str, content: str,
-                     operation_userid: str = "",
                      author: str = "通知程序", whether_private: bool = True,
                      whether_push_top: bool = False, whether_ding: bool = True) -> Dict:
         url = "https://oapi.dingtalk.com/topapi/blackboard/create"
         params = dict(access_token=self.accessToken)
+        private_level = 20 if whether_private else 0
         data = {"create_request": {
-            "operation_userid": operation_userid if operation_userid else self.getMainAdministratorId(),
-            "private_level": 20 if whether_private else 0,
+            "operation_userid": self.adminId,
+            "private_level": private_level,
             "ding": whether_ding,
             "blackboard_receiver": {
                 "userid_list": user_id_list
