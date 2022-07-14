@@ -1,5 +1,7 @@
 from utils.dingTalkOperator import DingTalkOperator
 
+__version__ = "1.0.0"
+
 """
 > 钉钉应用类型：**企业内部开发**
 需要在钉钉后台开启如下权限：
@@ -51,4 +53,5 @@ def main_product():
 
 
 if __name__ == '__main__':
+    print(f"{'-'*10} 当前版本：v{__version__} {'-'*10}\n")
     main_product()
