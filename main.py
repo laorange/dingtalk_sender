@@ -1,3 +1,5 @@
+import traceback
+
 from utils.dingTalkOperator import DingTalkOperator
 
 __version__ = "1.0.0"
@@ -48,6 +50,8 @@ def main_product():
             print(f"\n发送结果：{send_feedback}\n")
         else:
             print("没有找到符合条件的用户，请查证后重试")
+    except:
+        print(traceback.format_exc())
     finally:
         input("请敲击回车来结束程序：")
 
