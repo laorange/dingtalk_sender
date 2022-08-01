@@ -5,3 +5,4 @@ build/
 dist/
 *.exe
 *.spec
+*.db

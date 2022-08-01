@@ -26,15 +26,34 @@ class DepartmentDict(TypedDict):
     create_dept_group: bool  # ------------ "create_dept_group": true
 
 
+class AdministratorInfo(TypedDict):
+    sys_level: Literal[1, 2]
+    userid: UserId
+
+
+class UserDetail(TypedDict):
+    userid: str
+    unionid: str
+    name: str
+    job_number: str
+    title: str
+    exclusive_account: str
+    dept_id_list: List[int]
+    hired_date: int
+    real_authed: bool
+    active: bool
+    admin: bool
+    senior: bool
+    boss: str
+    manager_userid: str
+
+
+AddressBook = Dict[DepartmentId, List[UserDetail]]
+
+
 class Settings(TypedDict):
     AGENT_ID: str
     APP_KEY: str
     APP_SECRET: str
-    PRESET_DEPARTMENTS: List[DepartmentId]
-    PRESET_MEMBERS: UserNameIdDict
-    PUBLISHER: UserNameIdTuple
-
-
-class AdministratorInfo(TypedDict):
-    sys_level: Literal[1, 2]
-    userid: UserId
+    STATUS: Literal["INIT", "PREPARED", "WORKING", "DONE"]
+    ADDRESS_BOOK: AddressBook
