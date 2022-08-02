@@ -1,7 +1,7 @@
 import json
 import datetime
 
-import httpx
+import requests
 from tqdm import tqdm
 
 from utils.types import *
@@ -12,7 +12,7 @@ def getSettings(settingFileName) -> Settings:
     _settings = dict()
     try:
         with open(settingFileName, encoding="utf-8") as settings_json:
-            print("TIPS：已自动加载缓存。若需重新拉取组织成员信息，请删除或编辑配置文件”settings.json“\n")
+            print(f"TIPS：已自动加载缓存。若需重新拉取组织成员信息，请删除或编辑配置文件”{settingFileName}“\n")
             _settings = json.load(settings_json)
     finally:
         return _settings
@@ -34,7 +34,7 @@ class DingTalkHandler:
 
         self.accessToken: str = self.getAccessToken()
 
-        self.addressBook: AddressBook = {}
+        self.addressBook: AddressBook = settings.get("ADDRESS_BOOK", {})
         self.status = settings.get("STATUS", "INIT")
 
         if self.status != "DONE":
@@ -48,16 +48,16 @@ class DingTalkHandler:
     def getAccessToken(self) -> str:
         url = "https://oapi.dingtalk.com/gettoken"
         params = dict(appkey=self.appKey, appsecret=self.appSecret)
-        accessToken = httpx.get(url, params=params).json()["access_token"]
+        accessToken = requests.get(url, params=params).json()["access_token"]
         self.status = "PREPARED"
         return accessToken
 
     @staticmethod
     def getDingTalkResponse(method: Method, url: str, **kwargs) -> Dict:
         if method == "GET":
-            response = httpx.get(url, **kwargs).json()
+            response = requests.get(url, **kwargs).json()
         elif method == "POST":
-            response = httpx.post(url, **kwargs).json()
+            response = requests.post(url, **kwargs).json()
         else:
             raise Exception("暂不支持别的请求方式")
         if response.get("errcode", -1) != 0:
@@ -109,11 +109,11 @@ class DingTalkHandler:
                             for departmentId in tqdm(departmentIdList, desc="正在获取部门成员信息")}
         self.status = "DONE"
 
-    def createMyCalendar(self, publisherUserId: UserId, users: List[UserDetail], start: datetime.datetime, end: datetime.datetime,
+    def createMyCalendar(self, publisherUserUnionId: UnionId, users: List[UserDetail], start: datetime.datetime, end: datetime.datetime,
                          summary: str, description: str = ""):
         """
         根据自定义需求的创建日程，发布后即刻通知 \n
-        :param publisherUserId: 发布者的ID
+        :param publisherUserUnionId: 发布者的ID
         :param users: 日程参与者的信息
         :param start: 日程开始时间
         :param end: 日程结束时间
@@ -122,7 +122,7 @@ class DingTalkHandler:
         :return: None
         """
 
-        url = f"https://api.dingtalk.com/v1.0/calendar/users/{publisherUserId}/calendars/primary/events"
+        url = f"https://api.dingtalk.com/v1.0/calendar/users/{publisherUserUnionId}/calendars/primary/events"
         headers = {"x-acs-dingtalk-access-token": self.accessToken}
         data = {
             "summary": summary,
@@ -142,10 +142,10 @@ class DingTalkHandler:
                 {"id": user["unionid"], "isOptional": False} for user in (users if len(users) <= 500 else users[:499])
             ],
             "reminders": [
-                {"method": "dingtalk", "minutes": (end - start).seconds // 60 - 2},  # 通知发布2分钟后，应用内提醒
-                {"method": "dingtalk", "minutes": 60 if (end - start).seconds // 60 > 60 else (end - start).min // 2},  # 只剩60分钟，短信提醒
+                # {"method": "dingtalk", "minutes": (end - start).seconds // 60},  # 通知发布后，应用内提醒
+                # {"method": "dingtalk", "minutes": 60 if (end - start).seconds // 60 > 60 else (end - start).seconds // 60 // 2},  # 只剩60分钟，短信提醒
             ]
         }
 
-        response = httpx.post(url, headers=headers, json=data).json()
+        response = requests.post(url, headers=headers, json=data).json()
         return response
