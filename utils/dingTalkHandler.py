@@ -34,11 +34,12 @@ class DingTalkHandler:
 
         self.accessToken: str = self.getAccessToken()
 
-        self.addressBook: AddressBook = settings.get("ADDRESS_BOOK", {})
         self.status = settings.get("STATUS", "INIT")
 
-        if self.status != "DONE":
-            self.fetchAddressBook()
+        if self.status == "DONE":
+            self.addressBook: AddressBook = settings.get("ADDRESS_BOOK", {})
+        else:
+            self.addressBook = self.getAddressBook()
             outputSettings({"AGENT_ID": self.agentId,
                             "APP_KEY": self.appKey,
                             "APP_SECRET": self.appSecret,
@@ -102,12 +103,22 @@ class DingTalkHandler:
 
         return [self.getUserDetail(simpleUser["userid"]) for simpleUser in simpleUserList]
 
-    def fetchAddressBook(self):
+    def getDepartmentName(self, departmentId: DepartmentId = 1) -> DepartmentName:
+        url = "https://oapi.dingtalk.com/topapi/v2/department/get"
+        params = dict(access_token=self.accessToken)
+        data = dict(dept_id=departmentId)
+        response = self.getDingTalkResponse("POST", url, params=params, json=data)
+        return response["result"]["name"]
+
+    def getDeptAddressBook(self, dept_id: DepartmentId = 1) -> DeptAddressBook:
+        return {"dept_id": dept_id, "dept_name": self.getDepartmentName(dept_id), "users": self.getUserDetailListOfDepartment(dept_id)}
+
+    def getAddressBook(self) -> AddressBook:
         self.status = "WORKING"
         departmentIdList = self.getDescendantDepartmentIdList()
-        self.addressBook = {departmentId: (self.getUserDetailListOfDepartment(departmentId))
-                            for departmentId in tqdm(departmentIdList, desc="正在获取部门成员信息")}
+        addressBook = [self.getDeptAddressBook(departmentId) for departmentId in tqdm(departmentIdList, desc="正在获取部门成员信息")]
         self.status = "DONE"
+        return addressBook
 
     def createMyCalendar(self, publisherUserUnionId: UnionId, users: List[UserDetail], start: datetime.datetime, end: datetime.datetime,
                          summary: str, description: str = ""):

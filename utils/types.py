@@ -48,7 +48,13 @@ class UserDetail(TypedDict):
     manager_userid: str
 
 
-AddressBook = Dict[DepartmentId, List[UserDetail]]
+class DeptAddressBook(TypedDict):
+    dept_id: DepartmentId
+    dept_name: str
+    users: List[UserDetail]
+
+
+AddressBook = List[DeptAddressBook]
 
 
 class Settings(TypedDict):
