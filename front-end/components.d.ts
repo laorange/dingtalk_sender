@@ -8,8 +8,11 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     CalendarCreator: typeof import('./src/components/CalendarCreator.vue')['default']
+    DateTimeRangePicker: typeof import('./src/components/utils/DateTimeRangePicker.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
     NCascader: typeof import('naive-ui')['NCascader']
+    NConfigProvider: typeof import('naive-ui')['NConfigProvider']
+    NDatePicker: typeof import('naive-ui')['NDatePicker']
     NDivider: typeof import('naive-ui')['NDivider']
     NFormItem: typeof import('naive-ui')['NFormItem']
     NGi: typeof import('naive-ui')['NGi']

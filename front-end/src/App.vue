@@ -6,11 +6,13 @@ import UserParser from "./components/utils/UserParser.vue";
 import ReceiverSelector from "./components/ReceiverSelector.vue";
 import SenderSelector from "./components/SenderSelector.vue";
 import TextInputForm from "./components/utils/TextInputForm.vue";
+import DateTimeRangePicker from "./components/utils/DateTimeRangePicker.vue";
+import CalendarCreator from "./components/CalendarCreator.vue";
 
 const store = useStore();
 
 onMounted(async () => {
-  store.accessToken = await (await fetch((import.meta.env.VITE_BACKEND_URL ?? "") + "/access-token/")).json() as string;
+  store.accessToken = (await (await fetch((import.meta.env.VITE_BACKEND_URL ?? "") + "/access-token/")).json())["accessToken"] as string;
   store.addressBook = await (await fetch((import.meta.env.VITE_BACKEND_URL ?? "") + "/address-book/")).json() as AddressBook;
 });
 </script>
@@ -38,6 +40,14 @@ onMounted(async () => {
         <TextInputForm v-model:value="store.calendar.content" :textarea="true" :required="false" label="日程内容:" placeholder="请输入日程内容"/>
       </n-gi>
     </n-grid>
+
+    <n-divider/>
+
+    <n-space justify="center">
+      <DateTimeRangePicker v-model:value="store.calendar.timeRange" label="时间安排"/>
+    </n-space>
+
+    <CalendarCreator/>
   </main>
 
 </template>
