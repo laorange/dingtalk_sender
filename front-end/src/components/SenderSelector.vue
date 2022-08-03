@@ -6,7 +6,7 @@ const store = useStore();
 </script>
 
 <template>
-  <UserSelector v-model:users="store.senderUnionId" :multiple="false" :clearable="false" placeholder="选择通知发布者(需要具有发布日程权限)" label="发布者:"/>
+  <UserSelector v-model:value="store.senderUnionId" :multiple="false" :clearable="false" placeholder="选择通知发布者(需要具有发布日程权限)" label="发布者:"/>
 </template>
 
 <style scoped>

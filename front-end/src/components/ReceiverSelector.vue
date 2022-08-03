@@ -19,7 +19,7 @@ function parseSelectorToText() {
 </script>
 
 <template>
-  <UserSelector v-model:users="store.receiverDeptUnionIdArray" label="接收者:" :required="true" placeholder="请选择接受通知的用户"/>
+  <UserSelector v-model:value="store.receiverDeptUnionIdArray" label="接收者:" :required="true" placeholder="请选择接受通知的用户"/>
 
   <n-space align="center" justify="center">
     <n-button @click="parseSelectorToText" type="info">文字 ← 选项</n-button>

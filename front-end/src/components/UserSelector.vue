@@ -5,7 +5,7 @@ import {CascaderOption} from "naive-ui";
 import {DeptAddressBook, UserDetail} from "../assets/types";
 
 const props = withDefaults(defineProps<{
-  users: string | string[],
+  value: null | string | string[],
   placeholder: string,
   label?: string,
   marginBottom?: number,
@@ -16,11 +16,11 @@ const props = withDefaults(defineProps<{
   clearFilterAfterSelect?: boolean
 }>(), {marginBottom: 15, multiple: true, clearable: true, filterable: true, clearFilterAfterSelect: true, required: true});
 
-const emits = defineEmits(["update:users"]);
+const emits = defineEmits(["update:value"]);
 
-const usersLocal = computed<string | string[]>({
-  get: () => props.users,
-  set: (newValue) => emits("update:users", newValue),
+const usersLocal = computed<null | string | string[]>({
+  get: () => props.value,
+  set: (newValue) => emits("update:value", newValue),
 });
 
 const store = useStore();
@@ -44,7 +44,7 @@ const options = computed<CascaderOption[]>(() => {
 <template>
   <div :style="{marginBottom: `${marginBottom}px`}">
     <n-form-item :label="label??''" label-placement="left" :required="required" :show-feedback="false" :show-label="!!label"
-                 :validation-status="usersLocal.length?`success`:`error`">
+                 :validation-status="usersLocal?.length?`success`:`error`">
       <n-cascader
           v-model:value="usersLocal"
           :options="options"
