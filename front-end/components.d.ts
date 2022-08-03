@@ -18,7 +18,8 @@ declare module '@vue/runtime-core' {
     NSpace: typeof import('naive-ui')['NSpace']
     ReceiverSelector: typeof import('./src/components/ReceiverSelector.vue')['default']
     SenderSelector: typeof import('./src/components/SenderSelector.vue')['default']
-    UserParser: typeof import('./src/components/UserParser.vue')['default']
+    TextInputForm: typeof import('./src/components/utils/TextInputForm.vue')['default']
+    UserParser: typeof import('./src/components/utils/UserParser.vue')['default']
     UserSelector: typeof import('./src/components/UserSelector.vue')['default']
   }
 }

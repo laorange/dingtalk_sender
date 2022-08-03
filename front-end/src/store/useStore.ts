@@ -4,7 +4,7 @@ import {AddressBook} from "../assets/types";
 type State = {
     accessToken: string
     addressBook: AddressBook
-    senderUnionId: string
+    senderUnionId: null | string
     receiverDeptUnionIdArray: string[]
     userInputText: string
 
@@ -20,7 +20,7 @@ export const useStore = defineStore("store", {
         return {
             accessToken: "",
             addressBook: [],
-            senderUnionId: "",
+            senderUnionId: null,
             receiverDeptUnionIdArray: [],
             userInputText: "",
 

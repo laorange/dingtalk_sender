@@ -2,9 +2,10 @@
 import {onMounted} from "vue";
 import {useStore} from "./store/useStore";
 import {AddressBook} from "./assets/types";
-import UserParser from "./components/UserParser.vue";
+import UserParser from "./components/utils/UserParser.vue";
 import ReceiverSelector from "./components/ReceiverSelector.vue";
 import SenderSelector from "./components/SenderSelector.vue";
+import TextInputForm from "./components/utils/TextInputForm.vue";
 
 const store = useStore();
 
@@ -31,9 +32,10 @@ onMounted(async () => {
         <SenderSelector/>
       </n-gi>
       <n-gi>
-        <n-form-item label="日程标题:" :required="true" label-placement="left" :show-feedback="false">
-          <n-input v-model:value="store.calendar.title" placeholder="请输入日程标题"></n-input>
-        </n-form-item>
+        <TextInputForm v-model:value="store.calendar.title" label="日程标题:" placeholder="请输入日程标题"/>
+      </n-gi>
+      <n-gi span="2">
+        <TextInputForm v-model:value="store.calendar.content" :textarea="true" :required="false" label="日程内容:" placeholder="请输入日程内容"/>
       </n-gi>
     </n-grid>
   </main>
