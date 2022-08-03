@@ -12,10 +12,10 @@ const options = computed<CascaderOption[]>(() => {
     return {
       label: dept.dept_name,
       value: dept.dept_id,
-      children: dept.users.map(user => {
+      children: dept.users.map((user: UserDetail) => {
         return {
           label: user.name,
-          value: user.unionid,
+          value: [dept.dept_id, user.unionid].join(","),
         };
       }),
     };
@@ -26,12 +26,12 @@ function parseSelectorToText() {
   let userDetails: UserDetail[] = [];
   for (const deptAddressBook of store.addressBook) {
     for (const user of deptAddressBook.users) {
-      if (store.selectedUserUnionIdArray.indexOf(user.unionid) > -1) {
+      if (store.selectedUserUnionIdArray.map(du => du.split(",")[1]).indexOf(user.unionid) > -1) {
         userDetails.push(user);
       }
     }
   }
-  store.userInputText = userDetails.map(ud => ud.name).join("\n");
+  store.userInputText = Array.from(new Set(userDetails.map(ud => ud.name))).join("\n");
 }
 </script>
 
