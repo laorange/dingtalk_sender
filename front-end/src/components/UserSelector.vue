@@ -4,6 +4,24 @@ import {useStore} from "../store/useStore";
 import {CascaderOption} from "naive-ui";
 import {DeptAddressBook, UserDetail} from "../assets/types";
 
+const props = withDefaults(defineProps<{
+  users: string | string[],
+  placeholder: string,
+  label?: string,
+  marginBottom?: number,
+  required?: boolean,
+  multiple?: boolean,
+  clearable?: boolean,
+  filterable?: boolean,
+  clearFilterAfterSelect?: boolean
+}>(), {marginBottom: 15, multiple: true, clearable: true, filterable: true, clearFilterAfterSelect: true, required: true});
+
+const emits = defineEmits(["update:users"]);
+
+const usersLocal = computed<string | string[]>({
+  get: () => props.users,
+  set: (newValue) => emits("update:users", newValue),
+});
 
 const store = useStore();
 
@@ -21,44 +39,29 @@ const options = computed<CascaderOption[]>(() => {
     };
   });
 });
-
-function parseSelectorToText() {
-  let userDetails: UserDetail[] = [];
-  for (const deptAddressBook of store.addressBook) {
-    for (const user of deptAddressBook.users) {
-      if (store.selectedUserUnionIdArray.map(du => du.split(",")[1]).indexOf(user.unionid) > -1) {
-        userDetails.push(user);
-      }
-    }
-  }
-  store.userInputText = Array.from(new Set(userDetails.map(ud => ud.name))).join("\n");
-}
 </script>
 
 <template>
-  <div style="margin-bottom: 10px;">
-    <n-cascader
-        v-model:value="store.selectedUserUnionIdArray"
-        :options="options"
-        placeholder="请选择接受通知的用户"
-        check-strategy="child"
-        :max-tag-count="500"
-        expand-trigger="hover"
-        placement="bottom-start"
-        :multiple="true"
-        :clearable="true"
-        :cascade="true"
-        :show-path="true"
-        :filterable="true"
-        :clear-filter-after-select="true"
-    />
+  <div :style="{marginBottom: `${marginBottom}px`}">
+    <n-form-item :label="label??''" label-placement="left" :required="required" :show-feedback="false" :show-label="!!label"
+                 :validation-status="usersLocal.length?`success`:`error`">
+      <n-cascader
+          v-model:value="usersLocal"
+          :options="options"
+          :placeholder="placeholder"
+          check-strategy="child"
+          :max-tag-count="500"
+          expand-trigger="hover"
+          placement="bottom-start"
+          :multiple="multiple"
+          :clearable="clearable"
+          :cascade="true"
+          :show-path="true"
+          :filterable="filterable"
+          :clear-filter-after-select="clearFilterAfterSelect"
+      />
+    </n-form-item>
   </div>
-
-  <n-space align="center" justify="center">
-    <n-button @click="parseSelectorToText" type="info">文字 ← 选项</n-button>
-  </n-space>
-
-  <n-divider/>
 </template>
 
 <style scoped>

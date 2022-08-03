@@ -4,8 +4,14 @@ import {AddressBook} from "../assets/types";
 type State = {
     accessToken: string
     addressBook: AddressBook
-    selectedUserUnionIdArray: string[]
+    senderUnionId: string
+    receiverDeptUnionIdArray: string[]
     userInputText: string
+
+    calendar: {
+        title: string
+        content: string
+    }
 }
 
 
@@ -14,8 +20,14 @@ export const useStore = defineStore("store", {
         return {
             accessToken: "",
             addressBook: [],
-            selectedUserUnionIdArray: [],
+            senderUnionId: "",
+            receiverDeptUnionIdArray: [],
             userInputText: "",
+
+            calendar: {
+                title: "",
+                content: "",
+            },
         };
     },
     getters: {},

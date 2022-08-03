@@ -7,13 +7,17 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    CalendarCreator: typeof import('./src/components/CalendarCreator.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
     NCascader: typeof import('naive-ui')['NCascader']
     NDivider: typeof import('naive-ui')['NDivider']
+    NFormItem: typeof import('naive-ui')['NFormItem']
     NGi: typeof import('naive-ui')['NGi']
     NGrid: typeof import('naive-ui')['NGrid']
     NInput: typeof import('naive-ui')['NInput']
     NSpace: typeof import('naive-ui')['NSpace']
+    ReceiverSelector: typeof import('./src/components/ReceiverSelector.vue')['default']
+    SenderSelector: typeof import('./src/components/SenderSelector.vue')['default']
     UserParser: typeof import('./src/components/UserParser.vue')['default']
     UserSelector: typeof import('./src/components/UserSelector.vue')['default']
   }

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import UserSelector from "./components/UserSelector.vue";
 import {onMounted} from "vue";
 import {useStore} from "./store/useStore";
 import {AddressBook} from "./assets/types";
 import UserParser from "./components/UserParser.vue";
+import ReceiverSelector from "./components/ReceiverSelector.vue";
+import SenderSelector from "./components/SenderSelector.vue";
 
 const store = useStore();
 
@@ -19,12 +20,20 @@ onMounted(async () => {
   </header>
 
   <main>
-    <n-grid x-gap="20" cols="1 800:2">
+    <n-grid x-gap="20" y-gap="40" cols="1 800:2">
       <n-gi>
         <UserParser/>
       </n-gi>
       <n-gi>
-        <UserSelector/>
+        <ReceiverSelector/>
+      </n-gi>
+      <n-gi>
+        <SenderSelector/>
+      </n-gi>
+      <n-gi>
+        <n-form-item label="日程标题:" :required="true" label-placement="left" :show-feedback="false">
+          <n-input v-model:value="store.calendar.title" placeholder="请输入日程标题"></n-input>
+        </n-form-item>
       </n-gi>
     </n-grid>
   </main>
