@@ -10,6 +10,7 @@ app = Sanic("dingTalkSender")
 CORS(app)
 
 app.static("/", "./front-end/dist/index.html", name="index")
+app.static("/favicon.ico", "./front-end/dist/favicon.ico", name="favicon")
 app.static("/static", "./front-end/dist", name="dist")
 
 
