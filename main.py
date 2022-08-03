@@ -3,14 +3,14 @@ from sanic import Sanic
 from sanic.response import json
 from sanic_cors import CORS
 
-file = "settings-sillage.db"
+file = "settings.db"
 dingTalkHandler = DingTalkHandler(file)
 
 app = Sanic("dingTalkSender")
 CORS(app)
 
-# app.static("/", "./front-end/dist/index.html", name="index")
-# app.static("/static", "./front-end/dist", name="dist")
+app.static("/", "./front-end/dist/index.html", name="index")
+app.static("/static", "./front-end/dist", name="dist")
 
 
 @app.get("/address-book/")
