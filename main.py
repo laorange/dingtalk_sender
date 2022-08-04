@@ -1,6 +1,8 @@
+import os
+
 from utils.dingTalkHandler import DingTalkHandler
 from sanic import Sanic
-from sanic.response import json
+from sanic.response import json as jsonResponse
 from sanic_cors import CORS
 
 file = "settings.db"
@@ -16,13 +18,23 @@ app.static("/static", "./front-end/dist", name="dist")
 
 @app.get("/address-book/")
 async def addressBook(request):
-    return json(dingTalkHandler.addressBook)
+    return jsonResponse(dingTalkHandler.addressBook)
 
 
 @app.get("/access-token/")
 async def addressBook(request):
-    return json({"accessToken": dingTalkHandler.accessToken})
+    return jsonResponse({"accessToken": dingTalkHandler.accessToken})
+
+
+@app.websocket("/refresh-address-book/")
+async def feed(request, ws):
+    while True:
+        await ws.recv()
+        await dingTalkHandler.refreshAddressBook()
+        await ws.send("prepared")
 
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=8095)
+    PORT = 8095
+    os.startfile(f"http://localhost:{PORT}")
+    app.run(host='localhost', port=PORT)

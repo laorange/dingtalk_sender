@@ -16,12 +16,24 @@ function parseSelectorToText() {
   }
   store.userInputText = Array.from(new Set(userDetails.map(ud => ud.name))).join("\n");
 }
+
+function refreshAddressBook() {
+  let ws = new WebSocket("ws://localhost:8095/refresh-address-book/");
+  ws.onopen = () => ws.send("please refresh address book, thanks!");
+  ws.onmessage = (event) => {
+    let data = event.data;
+    console.log(data);
+    ws.close();
+  };
+  console.log("正在加载！");
+}
 </script>
 
 <template>
   <UserSelector v-model:value="store.receiverDeptUnionIdArray" label="接收者:" :required="true" placeholder="请选择接受通知的用户"/>
 
-  <n-space align="center" justify="center">
+  <n-space align="center" justify="space-around">
+    <n-button @click="refreshAddressBook()" type="error">刷新部门名单</n-button>
     <n-button @click="parseSelectorToText" type="info">文字 ← 选项</n-button>
   </n-space>
 

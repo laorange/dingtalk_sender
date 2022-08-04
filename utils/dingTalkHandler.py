@@ -1,8 +1,9 @@
 import json
 import datetime
 
-import requests
+import httpx
 from tqdm import tqdm
+import asyncio
 
 from utils.types import *
 
@@ -12,7 +13,7 @@ def getSettings(settingFileName) -> Settings:
     _settings = dict()
     try:
         with open(settingFileName, encoding="utf-8") as settings_json:
-            print(f"TIPS：已自动加载缓存。若需重新拉取组织成员信息，请删除或编辑配置文件”{settingFileName}“\n")
+            print(f"\nTIPS：已自动加载缓存。若需重新输入密钥等敏感信息，请删除配置文件”{settingFileName}“\n")
             _settings = json.load(settings_json)
     finally:
         return _settings
@@ -25,6 +26,7 @@ def outputSettings(settings: Settings, settingFileName):
 
 class DingTalkHandler:
     def __init__(self, settingFileName: str = "settings.json"):
+        self.settingFileName = settingFileName
         settings = getSettings(settingFileName)
         # 权限
         self.agentId: str = _ if (_ := settings.get("AGENT_ID", None)) else input("请输入AgentId: ")
@@ -39,84 +41,97 @@ class DingTalkHandler:
         if self.status == "DONE":
             self.addressBook: AddressBook = settings.get("ADDRESS_BOOK", {})
         else:
-            self.addressBook = self.getAddressBook()
-            outputSettings({"AGENT_ID": self.agentId,
-                            "APP_KEY": self.appKey,
-                            "APP_SECRET": self.appSecret,
-                            "STATUS": self.status,
-                            "ADDRESS_BOOK": self.addressBook}, settingFileName)
+            asyncio.run(self.refreshAddressBook())
+
+    async def refreshAddressBook(self):
+        self.addressBook = await self.getAddressBook()
+        outputSettings({"AGENT_ID": self.agentId,
+                        "APP_KEY": self.appKey,
+                        "APP_SECRET": self.appSecret,
+                        "STATUS": self.status,
+                        "ADDRESS_BOOK": self.addressBook}, self.settingFileName)
 
     def getAccessToken(self) -> str:
         url = "https://oapi.dingtalk.com/gettoken"
         params = dict(appkey=self.appKey, appsecret=self.appSecret)
-        accessToken = requests.get(url, params=params).json()["access_token"]
+        accessToken = httpx.get(url, params=params).json()["access_token"]
         self.status = "PREPARED"
         return accessToken
 
     @staticmethod
-    def getDingTalkResponse(method: Method, url: str, **kwargs) -> Dict:
+    async def getDingTalkResponse(method: Method, url: str, **kwargs) -> Dict:
         if method == "GET":
-            response = requests.get(url, **kwargs).json()
+            async with httpx.AsyncClient() as client:
+                response = (await client.get(url, **kwargs)).json()
         elif method == "POST":
-            response = requests.post(url, **kwargs).json()
+            async with httpx.AsyncClient() as client:
+                response = (await client.post(url, **kwargs)).json()
         else:
             raise Exception("暂不支持别的请求方式")
         if response.get("errcode", -1) != 0:
             raise Exception(response.get("errmsg", str(response)))
         return response
 
-    def getSubDepartmentIdList(self, departmentId: DepartmentId = 1) -> List[DepartmentId]:
+    async def getSubDepartmentIdList(self, departmentId: DepartmentId = 1) -> List[DepartmentId]:
         url = "https://oapi.dingtalk.com/topapi/v2/department/listsubid"
         params = dict(access_token=self.accessToken)
         data = dict(dept_id=departmentId)
-        response = self.getDingTalkResponse("POST", url=url, params=params, json=data)
+        response = await self.getDingTalkResponse("POST", url=url, params=params, json=data)
         return response["result"]["dept_id_list"]
 
-    def getDescendantDepartmentIdList(self, departmentId: DepartmentId = 1) -> List[DepartmentId]:
-        descendantDepartmentIdList = self.getSubDepartmentIdList(departmentId)
+    async def getDescendantDepartmentIdList(self, departmentId: DepartmentId = 1) -> List[DepartmentId]:
+        descendantDepartmentIdList = await self.getSubDepartmentIdList(departmentId)
         if len(descendantDepartmentIdList) != 0:
             for descendantDepartmentId in tqdm(descendantDepartmentIdList, desc="正在获取部门信息"):
-                descendantDepartmentIdList += self.getSubDepartmentIdList(descendantDepartmentId)
+                descendantDepartmentIdList += await self.getSubDepartmentIdList(descendantDepartmentId)
         return descendantDepartmentIdList + [1]  # 根部门 id=1
 
-    def getSimpleUserList(self, dept_id: DepartmentId = 1, cursor=0, size=100) -> List[UserInfoDict]:
+    async def getSimpleUserList(self, dept_id: DepartmentId = 1, cursor=0, size=100) -> List[UserInfoDict]:
         url = "https://oapi.dingtalk.com/topapi/user/listsimple"
         params = dict(access_token=self.accessToken)
         data = dict(dept_id=dept_id, cursor=cursor, size=size)
-        response = self.getDingTalkResponse("POST", url, params=params, json=data)
+        response = await self.getDingTalkResponse("POST", url, params=params, json=data)
         userList: List[UserInfoDict] = response["result"]["list"]
 
         if response["result"]["has_more"]:
-            userList = userList + (self.getSimpleUserList(dept_id=dept_id, cursor=cursor + 1, size=size))
+            userList = userList + (await self.getSimpleUserList(dept_id=dept_id, cursor=cursor + 1, size=size))
 
         return userList
 
-    def getUserDetail(self, userId: UserId) -> UserDetail:
+    async def getUserDetail(self, userId: UserId) -> UserDetail:
         url = "https://oapi.dingtalk.com/topapi/v2/user/get"
         params = dict(access_token=self.accessToken)
         data = dict(userid=userId)
-        response = self.getDingTalkResponse("POST", url, params=params, json=data)
+        response = await self.getDingTalkResponse("POST", url, params=params, json=data)
         return response["result"]
 
-    def getUserDetailListOfDepartment(self, dept_id: DepartmentId = 1) -> List[UserDetail]:
-        simpleUserList = self.getSimpleUserList(dept_id)
+    async def getUserDetailListOfDepartment(self, dept_id: DepartmentId = 1) -> List[UserDetail]:
+        simpleUserList = await self.getSimpleUserList(dept_id)
 
-        return [self.getUserDetail(simpleUser["userid"]) for simpleUser in simpleUserList]
+        # return [await self.getUserDetail(simpleUser["userid"]) for simpleUser in simpleUserList]
 
-    def getDepartmentName(self, departmentId: DepartmentId = 1) -> DepartmentName:
+        # # 不可行：会请求到钉钉限流
+        # userDetailListOfDepartment: List[UserDetail] = []
+        # for f in asyncio.as_completed([self.getUserDetail(simpleUser["userid"]) for simpleUser in simpleUserList]):
+        #     userDetailListOfDepartment.append(await f)
+        # return userDetailListOfDepartment
+
+        return [(await self.getUserDetail(simpleUser["userid"])) for simpleUser in simpleUserList]
+
+    async def getDepartmentName(self, departmentId: DepartmentId = 1) -> DepartmentName:
         url = "https://oapi.dingtalk.com/topapi/v2/department/get"
         params = dict(access_token=self.accessToken)
         data = dict(dept_id=departmentId)
-        response = self.getDingTalkResponse("POST", url, params=params, json=data)
+        response = await self.getDingTalkResponse("POST", url, params=params, json=data)
         return response["result"]["name"]
 
-    def getDeptAddressBook(self, dept_id: DepartmentId = 1) -> DeptAddressBook:
-        return {"dept_id": dept_id, "dept_name": self.getDepartmentName(dept_id), "users": self.getUserDetailListOfDepartment(dept_id)}
+    async def getDeptAddressBook(self, dept_id: DepartmentId = 1) -> DeptAddressBook:
+        return {"dept_id": dept_id, "dept_name": await self.getDepartmentName(dept_id), "users": await self.getUserDetailListOfDepartment(dept_id)}
 
-    def getAddressBook(self) -> AddressBook:
+    async def getAddressBook(self) -> AddressBook:
         self.status = "WORKING"
-        departmentIdList = self.getDescendantDepartmentIdList()
-        addressBook = [self.getDeptAddressBook(departmentId) for departmentId in tqdm(departmentIdList, desc="正在获取部门成员信息")]
+        departmentIdList = await self.getDescendantDepartmentIdList()
+        addressBook = [(await self.getDeptAddressBook(departmentId)) for departmentId in tqdm(departmentIdList, desc="正在获取部门成员信息")]
         self.status = "DONE"
         return addressBook
 
@@ -158,5 +173,5 @@ class DingTalkHandler:
             ]
         }
 
-        response = requests.post(url, headers=headers, json=data).json()
+        response = httpx.post(url, headers=headers, json=data).json()
         return response
