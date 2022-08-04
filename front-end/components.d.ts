@@ -7,6 +7,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    ApiFetcher: typeof import('./src/components/utils/ApiFetcher.vue')['default']
     CalendarCreator: typeof import('./src/components/CalendarCreator.vue')['default']
     DateTimeRangePicker: typeof import('./src/components/utils/DateTimeRangePicker.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
@@ -20,6 +21,8 @@ declare module '@vue/runtime-core' {
     NInput: typeof import('naive-ui')['NInput']
     NSpace: typeof import('naive-ui')['NSpace']
     ReceiverSelector: typeof import('./src/components/ReceiverSelector.vue')['default']
+    RouterLink: typeof import('vue-router')['RouterLink']
+    RouterView: typeof import('vue-router')['RouterView']
     SenderSelector: typeof import('./src/components/SenderSelector.vue')['default']
     TextInputForm: typeof import('./src/components/utils/TextInputForm.vue')['default']
     UserParser: typeof import('./src/components/utils/UserParser.vue')['default']
