@@ -3,8 +3,10 @@ import {useStore} from "../store/useStore";
 import dayjs from "dayjs";
 import {computed} from "vue";
 import {useDialog, useMessage} from "naive-ui";
+import {useRouter} from "vue-router";
 
 const store = useStore();
+const router = useRouter();
 const dialog = useDialog();
 const message = useMessage();
 
@@ -17,7 +19,8 @@ const whetherCanSend = computed<boolean>(() => {
 const handlers = {
   async submit() {
     try {
-      await fetch(`https://api.dingtalk.com/v1.0/calendar/users/${store.senderDeptUnionId?.split(",")[1]}/calendars/primary/events`, {
+      let url = `https://api.dingtalk.com/v1.0/calendar/users/${store.senderUnionId}/calendars/primary/events`
+      let result = await (await fetch(url, {
         method: "POST",
         headers: {"x-acs-dingtalk-access-token": store.accessToken},
         body: JSON.stringify({
@@ -37,8 +40,15 @@ const handlers = {
             return {id: du.split(",")[1], isOptional: false};
           }),
         }),
-      });
-      message.success("发送成功");
+      })).json();
+      debugger
+      if (result.id) {
+        message.success("发送成功");
+        console.log(result.id);
+        await router.push({name: "query-calendar", params: {eventId: result.id}});
+      } else {
+        message.error(`发送失败: 未获取到有效的返回参数`);
+      }
     } catch (e) {
       message.error(`发送失败: ${e}`);
     }

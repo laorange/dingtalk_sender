@@ -6,13 +6,14 @@ import ResultDisplay from "../pages/ResultDisplay.vue";
 
 const routes: RouteRecordRaw[] = [
     {
-        path: "/",
-        name: "index",
+        path: "/create-calendar/",
+        name: "create-calendar",
         component: CalendarCreateForm,
+        alias: "/",
     },
     {
-        path: "/result/",
-        name: "result",
+        path: "/query-calendar/:eventId/",
+        name: "query-calendar",
         component: ResultDisplay,
     },
 ];
