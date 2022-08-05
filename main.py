@@ -23,7 +23,7 @@ async def addressBook(request):
 
 @app.get("/access-token/")
 async def addressBook(request):
-    return jsonResponse({"accessToken": dingTalkHandler.accessToken})
+    return jsonResponse({"accessToken": dingTalkHandler.getAccessToken()})
 
 
 @app.websocket("/refresh-address-book/")
