@@ -10,9 +10,6 @@ const store = useStore();
     <n-message-provider>
       <n-spin :show="store.isLoading">
 
-        <header>
-          <h1>基于钉钉的批量通知程序</h1>
-        </header>
         <router-view/>
         <ApiFetcher/>
 

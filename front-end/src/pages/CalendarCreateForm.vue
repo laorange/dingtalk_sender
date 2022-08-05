@@ -11,6 +11,8 @@ const store = useStore();
 </script>
 
 <template>
+  <h1>新建日程</h1>
+
   <main>
     <n-grid x-gap="20" y-gap="40" cols="1 800:2">
       <n-gi>
