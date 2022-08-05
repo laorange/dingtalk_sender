@@ -1,4 +1,6 @@
 import os
+import sys
+import traceback
 
 from utils.dingTalkHandler import DingTalkHandler
 from sanic import Sanic
@@ -10,10 +12,6 @@ dingTalkHandler = DingTalkHandler(file)
 
 app = Sanic("dingTalkSender")
 CORS(app)
-
-app.static("/", "./front-end/dist/index.html", name="index")
-app.static("/favicon.ico", "./front-end/dist/favicon.ico", name="favicon")
-app.static("/static", "./front-end/dist", name="dist")
 
 
 @app.get("/address-book/")
@@ -43,6 +41,21 @@ async def feed(request, ws):
 
 
 if __name__ == '__main__':
-    PORT = 8095
-    os.startfile(f"http://localhost:{PORT}")
-    app.run(host='localhost', port=PORT)
+    try:
+        # region 适配pyinstaller打包后的静态文件位置
+        if getattr(sys, 'frozen', None):
+            basedir = sys._MEIPASS
+        else:
+            basedir = os.path.dirname(__file__)
+
+        app.static("/", os.path.join(basedir, "front-end/dist/index.html"), name="index")
+        app.static("/favicon.ico", os.path.join(basedir, "front-end/dist/favicon.ico"), name="favicon")
+        app.static("/static", os.path.join(basedir, "front-end/dist"), name="dist")  # endregion
+
+        PORT = 8095
+        os.startfile(f"http://localhost:{PORT}")
+        app.run(host='localhost', port=PORT)
+    except:
+        traceback.print_exc()
+    finally:
+        input("程序结束，如需关闭，请敲击回车: ")

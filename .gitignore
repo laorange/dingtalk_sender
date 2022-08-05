@@ -4,5 +4,4 @@ settings.json
 build/
 dist/
 *.exe
-*.spec
 *.db
