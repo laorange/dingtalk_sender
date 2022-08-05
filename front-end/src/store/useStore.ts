@@ -14,6 +14,8 @@ type State = {
         content: string
         timeRange: [string, string]
     }
+
+    isLoading: boolean
 }
 
 
@@ -31,6 +33,8 @@ export const useStore = defineStore("store", {
                 content: "",
                 timeRange: [dayjs().format("YYYY-MM-DD HH:mm:ss"), dayjs().add(1, "day").format("YYYY-MM-DD HH:mm:ss")],
             },
+
+            isLoading: false,
         };
     },
     getters: {},

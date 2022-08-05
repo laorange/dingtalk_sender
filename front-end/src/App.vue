@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import ApiFetcher from "./components/utils/ApiFetcher.vue";
+import {useStore} from "./store/useStore";
 
+const store = useStore();
 </script>
 
 <template>
-  <header>
-    <h1>基于钉钉的批量通知程序</h1>
-  </header>
+  <n-dialog-provider>
+    <n-message-provider>
+      <n-spin :show="store.isLoading">
 
-  <router-view/>
+        <header>
+          <h1>基于钉钉的批量通知程序</h1>
+        </header>
+        <router-view/>
+        <ApiFetcher/>
 
-  <ApiFetcher/>
+      </n-spin>
+    </n-message-provider>
+  </n-dialog-provider>
 </template>
 
 <style>

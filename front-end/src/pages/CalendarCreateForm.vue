@@ -5,7 +5,7 @@ import SenderSelector from "../components/SenderSelector.vue";
 import TextInputForm from "../components/utils/TextInputForm.vue";
 import {useStore} from "../store/useStore";
 import DateTimeRangePicker from "../components/utils/DateTimeRangePicker.vue";
-import CalendarCreator from "../components/CalendarCreator.vue";
+import CalendarButton from "../components/CalendarButton.vue";
 
 const store = useStore();
 </script>
@@ -33,10 +33,10 @@ const store = useStore();
     <n-divider/>
 
     <n-space justify="center">
-      <DateTimeRangePicker v-model:value="store.calendar.timeRange" label="时间安排"/>
+      <DateTimeRangePicker label="时间安排"/>
     </n-space>
 
-    <CalendarCreator/>
+    <CalendarButton/>
   </main>
 </template>
 
