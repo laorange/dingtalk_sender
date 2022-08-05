@@ -22,7 +22,7 @@ const store = useStore();
         <ReceiverSelector/>
       </n-gi>
       <n-gi>
-        <SenderSelector/>
+        <SenderSelector placeholder="选择发布者(需要具有日程发布权限)"/>
       </n-gi>
       <n-gi>
         <TextInputForm v-model:value="store.calendar.title" label="日程标题:" placeholder="请输入日程标题"/>

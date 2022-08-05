@@ -15,6 +15,11 @@ type State = {
         timeRange: [string, string]
     }
 
+    bulletin: {
+        title: string
+        content: string
+    }
+
     isLoading: boolean
 }
 
@@ -32,6 +37,11 @@ export const useStore = defineStore("store", {
                 title: "",
                 content: "",
                 timeRange: [dayjs().format("YYYY-MM-DD HH:mm:ss"), dayjs().add(1, "day").format("YYYY-MM-DD HH:mm:ss")],
+            },
+
+            bulletin: {
+                title: "",
+                content: "",
             },
 
             isLoading: false,

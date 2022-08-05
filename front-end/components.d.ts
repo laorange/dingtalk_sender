@@ -8,6 +8,7 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     ApiFetcher: typeof import('./src/components/utils/ApiFetcher.vue')['default']
+    BulletinButton: typeof import('./src/components/BulletinButton.vue')['default']
     CalendarButton: typeof import('./src/components/CalendarButton.vue')['default']
     CopyrightDiv: typeof import('./src/components/CopyrightDiv.vue')['default']
     DateTimeRangePicker: typeof import('./src/components/utils/DateTimeRangePicker.vue')['default']

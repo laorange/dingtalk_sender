@@ -26,6 +26,14 @@ async def addressBook(request):
     return jsonResponse({"accessToken": dingTalkHandler.getAccessToken()})
 
 
+@app.post("/send-bulletin/")
+async def sendBulletin(request):
+    try:
+        return jsonResponse(await dingTalkHandler.sendBulletin(data=request.json))
+    except Exception as e:
+        return jsonResponse({"errorMsg": f"{e}"}, status=400)
+
+
 @app.websocket("/refresh-address-book/")
 async def feed(request, ws):
     while True:

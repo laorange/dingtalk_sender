@@ -2,11 +2,13 @@
 import {useStore} from "../store/useStore";
 import UserSelector from "./UserSelector.vue";
 
+defineProps<{ placeholder: string }>();
+
 const store = useStore();
 </script>
 
 <template>
-  <UserSelector v-model:value="store.senderDeptUnionId" :multiple="false" :clearable="false" placeholder="选择通知发布者(需要具有发布日程权限)" label="发布者:"/>
+  <UserSelector v-model:value="store.senderDeptUnionId" :multiple="false" :clearable="false" :placeholder="placeholder" label="发布者:"/>
 </template>
 
 <style scoped>

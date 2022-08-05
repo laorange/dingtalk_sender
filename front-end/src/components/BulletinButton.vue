@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {useStore} from "../store/useStore";
-import dayjs from "dayjs";
 import {computed} from "vue";
 import {useDialog, useMessage} from "naive-ui";
 import {useRouter} from "vue-router";
@@ -13,42 +12,35 @@ const message = useMessage();
 const whetherCanSend = computed<boolean>(() => {
   return !!store.senderDeptUnionId
       && !!store.receiverDeptUnionIdArray.length
-      && !!store.calendar.title;
+      && !!store.bulletin.title;
 });
 
 const handlers = {
   async submit() {
     try {
-      let url = `https://api.dingtalk.com/v1.0/calendar/users/${store.senderUnionId}/calendars/primary/events`;
+      let url = (import.meta.env.VITE_BACKEND_URL ?? "") + "/send-bulletin/";
+      let senderDetail = store.getUserDetailByUnionId(store.senderUnionId);
       let result = await (await fetch(url, {
         method: "POST",
-        headers: {"x-acs-dingtalk-access-token": store.accessToken},
         body: JSON.stringify({
-          summary: store.calendar.title,
-          description: store.calendar.content,
-          isAllDay: false,
-          start: {
-            dateTime: dayjs(store.calendar.timeRange[0]).format("YYYY-MM-DDTHH:mm:ss+08:00"),
-            timeZone: "Asia/Shanghai",
+          create_request: {
+            operation_userid: senderDetail?.userid,
+            private_level: 20, // whether_private ? 20 : 0
+            ding: true,
+            blackboard_receiver: {
+              userid_list: store.receiverDeptUnionIdArray.map(du => store.getUserDetailByUnionId(du.split(",")[1])?.userid),
+            },
+            title: store.bulletin.title,
+            content: store.bulletin.content,
+            push_top: false,
+            author: senderDetail?.name,
           },
-          end: {
-            dateTime: dayjs(store.calendar.timeRange[1]).format("YYYY-MM-DDTHH:mm:ss+08:00"),
-            timeZone: "Asia/Shanghai",
-          },
-          reminders: [],
-          attendees: store.receiverDeptUnionIdArray.map(du => {
-            return {id: du.split(",")[1], isOptional: false};
-          }),
         }),
       })).json();
 
-      if (result.id) {
-        message.success("发送成功");
-        console.log(result.id);
-        await router.push({name: "query-calendar", params: {eventId: result.id}});
-      } else {
-        message.error(`发送失败: 未获取到有效的返回参数`);
-      }
+      message.success("发送成功，请在钉钉内查看");
+      console.log(result);
+      await router.push({name: "home"});
     } catch (e) {
       message.error(`发送失败: ${e}`);
     }

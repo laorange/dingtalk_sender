@@ -56,6 +56,7 @@ class DingTalkHandler:
         params = dict(appkey=self.appKey, appsecret=self.appSecret)
         accessToken = httpx.get(url, params=params).json()["access_token"]
         self.status = "PREPARED"
+        self.accessToken = accessToken
         return accessToken
 
     @staticmethod
@@ -175,3 +176,23 @@ class DingTalkHandler:
 
         response = httpx.post(url, headers=headers, json=data).json()
         return response
+
+    async def sendBulletin(self, data) -> Dict:
+        url = "https://oapi.dingtalk.com/topapi/blackboard/create"
+        params = dict(access_token=self.accessToken)
+
+        # private_level = 20 if whether_private else 0
+        # data = {"create_request": {
+        #     "operation_userid": self.publisher[1],
+        #     "private_level": private_level,
+        #     "ding": whether_ding,
+        #     "blackboard_receiver": {
+        #         "userid_list": user_id_list
+        #     },
+        #     "title": title,
+        #     "content": content,
+        #     "push_top": whether_push_top,
+        #     "author": self.publisher[0]
+        # }}
+
+        return await self.getDingTalkResponse("POST", url, params=params, json=data)
