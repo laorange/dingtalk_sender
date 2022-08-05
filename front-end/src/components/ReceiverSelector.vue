@@ -32,9 +32,10 @@ const handlers = {
         message.success("刷新成功");
         ws.close();
       };
-      store.isLoading = false;
+      ws.onclose = () => store.isLoading = false;
     } catch (e) {
-      message.error("请求数据失败！请检查后端服务是否已被关闭")
+      message.error("请求数据失败！请检查后端服务是否已被关闭");
+      store.isLoading = false;
     }
   },
   toRefreshAddressBook() {
