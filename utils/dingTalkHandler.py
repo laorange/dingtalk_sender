@@ -54,7 +54,11 @@ class DingTalkHandler:
     def getAccessToken(self) -> str:
         url = "https://oapi.dingtalk.com/gettoken"
         params = dict(appkey=self.appKey, appsecret=self.appSecret)
-        accessToken = httpx.get(url, params=params).json()["access_token"]
+        try:
+            accessToken = httpx.get(url, params=params).json()["access_token"]
+        except Exception as e:
+            print(f"ERROR：验证密钥失败，请检查应用凭证是否正确，或检查网络连接。({e})")
+            raise e
         self.status = "PREPARED"
         self.accessToken = accessToken
         return accessToken

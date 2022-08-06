@@ -7,9 +7,6 @@ from sanic import Sanic
 from sanic.response import json as jsonResponse
 from sanic_cors import CORS
 
-file = "settings.db"
-dingTalkHandler = DingTalkHandler(file)
-
 app = Sanic("dingTalkSender")
 CORS(app)
 
@@ -42,6 +39,8 @@ async def feed(request, ws):
 
 if __name__ == '__main__':
     try:
+        dingTalkHandler = DingTalkHandler("settings.db")
+
         # region 适配pyinstaller打包后的静态文件位置
         if getattr(sys, 'frozen', None):
             basedir = sys._MEIPASS
