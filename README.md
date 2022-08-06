@@ -13,6 +13,10 @@
 
 拟通过这份名单，根据钉钉接口检索信息，并以**公告**或**日程**的形式批量通知他们。
 
+## B站视频
+
++ 钉钉批量通知程序: https://www.bilibili.com/video/BV1aS4y147Nt/
+
 ## 初次使用
 
 1. 您可以通过[**克隆代码**](https://github.com/laorange/dingtalk_sender/archive/refs/heads/master.zip)或[**下载发行版**](https://github.com/laorange/dingtalk_sender/releases)来获取程序。
