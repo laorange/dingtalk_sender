@@ -1,9 +1,19 @@
 {
-  "name": "front-end",
+  "name": "@laorange/dingtalk_sender",
   "private": false,
+  "author": "laorange",
   "license": "AGPL-3.0",
   "version": "1.0.0",
+  "description": "基于钉钉的批量通知程序",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laorange/dingtalk_sender.git"
+  },
+  "bugs": {
+    "url": "https://github.com/laorange/dingtalk_sender/issues"
+  },
+  "homepage": "https://github.com/laorange/dingtalk_sender#readme",
   "scripts": {
     "dev": "vite",
     "production": "vite --mode=production",
