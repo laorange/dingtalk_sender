@@ -12,7 +12,8 @@ const message = useMessage();
 const whetherCanSend = computed<boolean>(() => {
   return !!store.senderDeptUnionId
       && !!store.receiverDeptUnionIdArray.length
-      && !!store.bulletin.title;
+      && !!store.bulletin.title
+      && !!store.bulletin.content;
 });
 
 const handlers = {

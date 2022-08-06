@@ -27,7 +27,7 @@ const store = useStore();
         <TextInputForm v-model:value="store.bulletin.title" label="公告标题:" placeholder="请输入公告标题"/>
       </n-gi>
       <n-gi span="2">
-        <TextInputForm v-model:value="store.bulletin.content" :textarea="true" :required="false" label="公告内容:" placeholder="请输入公告内容"/>
+        <TextInputForm v-model:value="store.bulletin.content" :textarea="true" :required="true" label="公告内容:" placeholder="请输入公告内容"/>
       </n-gi>
     </n-grid>
   </main>
