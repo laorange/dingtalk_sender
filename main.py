@@ -52,8 +52,10 @@ if __name__ == '__main__':
         app.static("/static", os.path.join(basedir, "front-end/dist"), name="dist")  # endregion
 
         PORT = 8095
-        os.startfile(f"http://localhost:{PORT}")
-        app.run(host='localhost', port=PORT)
+        try:
+            os.startfile(f"http://localhost:{PORT}")
+        finally:
+            app.run(host='localhost', port=PORT)
     except:
         traceback.print_exc()
     finally:
