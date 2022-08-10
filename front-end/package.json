@@ -3,7 +3,7 @@
   "private": false,
   "author": "laorange",
   "license": "AGPL-3.0",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "基于钉钉的批量通知程序",
   "type": "module",
   "repository": {
