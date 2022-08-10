@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
         component: CalendarCreateForm,
     },
     {
-        path: "/query-calendar/:eventId/",
+        path: "/query-calendar/:eventId/:senderUnionId/",
         name: "query-calendar",
         component: ResultDisplay,
     },

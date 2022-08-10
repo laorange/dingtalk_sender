@@ -45,7 +45,7 @@ const handlers = {
       if (result.id) {
         message.success("发送成功");
         console.log(result.id);
-        await router.push({name: "query-calendar", params: {eventId: result.id}});
+        await router.push({name: "query-calendar", params: {eventId: result.id, senderUnionId: store.senderUnionId}});
       } else {
         message.error(`发送失败: 未获取到有效的返回参数`);
       }

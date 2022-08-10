@@ -8,15 +8,15 @@ const store = useStore();
 const route = useRoute();
 const router = useRouter();
 const calendar_id = computed<string>(() => `${route.params.eventId ?? ""}`);
+const senderUnionId = computed<string>(() => `${route.params.senderUnionId ?? ""}`);
 
 const result = ref<CalendarDetail | null>(null);
 
 const handlers = {
   async getCalendarDetail() {
-    if (!store.senderUnionId) await router.push({"name": "create-calendar"});
-    if (!calendar_id.value || !store.accessToken || !store.senderUnionId) return null;
+    if (!calendar_id.value || !store.accessToken || !senderUnionId.value) return null;
 
-    let url = `https://api.dingtalk.com/v1.0/calendar/users/${store.senderUnionId}/calendars/primary/events/${calendar_id.value}?maxAttendees=500`;
+    let url = `https://api.dingtalk.com/v1.0/calendar/users/${senderUnionId.value}/calendars/primary/events/${calendar_id.value}?maxAttendees=500`;
     return await (await fetch(url, {
       method: "GET",
       headers: {"x-acs-dingtalk-access-token": store.accessToken},
@@ -27,7 +27,7 @@ const handlers = {
   },
 };
 
-watch(() => [store.accessToken, calendar_id.value, store.senderUnionId], handlers.refreshResult, {deep: true, immediate: true});
+watch(() => [store.accessToken, calendar_id.value], handlers.refreshResult, {deep: true, immediate: true});
 </script>
 
 <template>
